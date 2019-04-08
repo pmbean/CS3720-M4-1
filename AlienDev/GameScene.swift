@@ -12,6 +12,9 @@ import GameplayKit
 class GameScene: SKScene {
     
     var alienDev: SKSpriteNode?
+    var lastSpawnTimeInterval: CFTimeInterval?
+    var lastUpdateTimeInterval: CFTimeInterval?
+    
     
     private var label : SKLabelNode?
     private var spinnyNode : SKShapeNode?
@@ -64,8 +67,30 @@ class GameScene: SKScene {
         evilBug.run(SKAction.sequence([actionMove, actionMoveDone]))
     }
     
+    func updateWithTimeSinceLastUpdate(timeSinceLast: CFTimeInterval) {
+        if let lastSpawn = lastSpawnTimeInterval {
+            lastSpawnTimeInterval! += timeSinceLast
+            if (lastSpawn > 1.0) {
+                lastSpawnTimeInterval = 0
+                createBug()
+            }
+        } else {
+            lastSpawnTimeInterval = 0
+        }
+    }
     
     override func update(_ currentTime: TimeInterval) {
         // Called before each frame is rendered
+        if let lastUpdate = lastUpdateTimeInterval {
+            var timeSinceLast = currentTime - lastUpdate as CFTimeInterval
+            lastUpdateTimeInterval = currentTime
+            if(timeSinceLast > 1) {
+                timeSinceLast = 1.0/60.0
+                lastUpdateTimeInterval = currentTime
+            }
+            updateWithTimeSinceLastUpdate(timeSinceLast: timeSinceLast)
+        } else {
+            lastUpdateTimeInterval = currentTime
+        }
     }
 }
